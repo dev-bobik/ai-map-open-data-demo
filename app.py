@@ -3,8 +3,24 @@ import threading
 import time
 import os
 import requests
+from sentence_transformers import SentenceTransformer
+import numpy as np
+from vector_store import VectorStore
 
 app = Flask(__name__)
+
+# Load embedding model lazily
+EMBEDDING_MODEL = os.environ.get('EMBEDDING_MODEL', 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
+_embedding_model = None
+
+def get_embedding_model():
+    global _embedding_model
+    if _embedding_model is None:
+        _embedding_model = SentenceTransformer(EMBEDDING_MODEL)
+    return _embedding_model
+
+vs = VectorStore()
+vs.load()
 
 # Lazy-loaded chatbot variables
 chatbot = None
@@ -114,6 +130,25 @@ def get_bot_response():
 
     # If still training or chatbot not available, return fallback immediately
     return jsonify({'response': simple_fallback_response(user_message)})
+
+
+@app.route('/query', methods=['POST'])
+def query():
+    data = request.get_json(silent=True)
+    if not data or 'q' not in data:
+        return jsonify({'error': 'missing q'}), 400
+    q = data['q']
+    model = get_embedding_model()
+    q_emb = model.encode(q, convert_to_numpy=True).astype('float32')
+    res = vs.search(q_emb, k=5)
+    # assemble answer as concatenation of top texts (simple extractive)
+    texts = [r['metadata']['text'] for row in res for r in row]
+    answer = '\n\n'.join(texts[:3]) if texts else ''
+    sources = [r['metadata'] for row in res for r in row]
+    # If HF configured, attempt to generate a nicer answer using HF model
+    hf_candidate = call_hf_model(q + '\n\n' + answer) if answer else None
+    final = hf_candidate if hf_candidate else (answer if answer else simple_fallback_response(q))
+    return jsonify({'answer': final, 'sources': sources})
 
 
 if __name__ == '__main__':
