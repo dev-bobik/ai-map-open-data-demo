@@ -7,3 +7,105 @@ body {
     width: 100%;
     height: 100vh;
 }
+
+#chat-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 300px;
+    height: 400px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 20000; /* ensure chat is above map */
+    pointer-events: auto; /* allow clicks */
+}
+
+/* Ensure Leaflet map stays below chat */
+.leaflet-container,
+.leaflet-pane,
+.leaflet-map-pane,
+.leaflet-tile-pane,
+.leaflet-overlay-pane,
+.leaflet-shadow-pane,
+.leaflet-marker-pane,
+.leaflet-tooltip-pane,
+.leaflet-popup-pane {
+    z-index: 0 !important;
+}
+
+#chat-header {
+    background: #007bff;
+    color: white;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#chat-header button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+#chat-messages {
+    flex-grow: 1;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+.message {
+    margin: 5px;
+    padding: 8px 12px;
+    border-radius: 15px;
+    max-width: 80%;
+}
+
+.user-message {
+    background: #007bff;
+    color: white;
+    margin-left: auto;
+}
+
+.bot-message {
+    background: #e9ecef;
+    color: black;
+    margin-right: auto;
+}
+
+#chat-input-container {
+    padding: 10px;
+    display: flex;
+    border-top: 1px solid #ddd;
+}
+
+#chat-input {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    margin-right: 5px;
+}
+
+#send-message {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.minimized {
+    height: 50px !important;
+}
+
+.minimized #chat-messages,
+.minimized #chat-input-container {
+    display: none;
+}
